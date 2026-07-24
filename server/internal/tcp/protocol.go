@@ -33,7 +33,7 @@ const headerSize = 12
 const maxFilenameSize uint16 = 255
 const maxPayloadSize uint32 = 3 << 30
 
-func (h *Header) WriteHeader() []byte {
+func WriteHeader(h *Header) []byte {
 	buffer := make([]byte, headerSize)
 	buffer[0], buffer[1] = h.Magic[0], h.Magic[1]
 	buffer[2] = h.Version

@@ -1,7 +1,11 @@
 package tcp
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
+	"io"
+	"log"
 	"net"
 )
 
@@ -42,5 +46,21 @@ func (s *Server) accept() {
 func (s *Server) handleConnection(conn net.Conn) {
 	defer conn.Close()
 
-	fmt.Printf("New connection %s", conn.RemoteAddr())
+	reader := bufio.NewReader(conn)
+	fmt.Printf("New connection %s\n", conn.RemoteAddr())
+
+	for {
+		header, err := Read(reader)
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				fmt.Printf("Reading error: %s\n", err)
+			}
+			break
+		}
+
+		switch header.Op {
+		case Ping:
+			log.Println("Ping received")
+		}
+	}
 }
