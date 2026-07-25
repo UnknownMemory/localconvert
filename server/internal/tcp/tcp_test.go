@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"net"
 	"testing"
-	"time"
 )
 
 func TestPing(t *testing.T) {
@@ -12,16 +11,16 @@ func TestPing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to dial server: %s", err)
 	}
-	time.Sleep(5 * time.Second)
+
 	writer := bufio.NewWriter(conn)
 
 	msg := WriteHeader(&Header{
 		Magic:    Magic,
 		Version:  Version,
 		Op:       Ping,
-		Filename: uint16(0),
-		Options:  uint16(0),
-		Payload:  uint32(0),
+		Filename: 0,
+		Options:  0,
+		Payload:  0,
 	})
 
 	_, err = writer.Write(msg)

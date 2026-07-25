@@ -28,6 +28,13 @@ type Header struct {
 	Payload  uint32
 }
 
+type Data struct {
+	Header   *Header
+	Filename string
+	Options  string
+	Payload  io.Reader
+}
+
 const headerSize = 12
 
 const maxFilenameSize uint16 = 255
@@ -46,7 +53,7 @@ func WriteHeader(h *Header) []byte {
 	return buffer
 }
 
-func Read(r io.Reader) (*Header, error) {
+func ValidHeader(r io.Reader) (*Header, error) {
 	headerBuffer := make([]byte, headerSize)
 
 	_, err := io.ReadFull(r, headerBuffer)
@@ -84,6 +91,46 @@ func Read(r io.Reader) (*Header, error) {
 	}
 
 	return header, nil
+}
+
+func Read(r io.Reader) (*Data, error) {
+	header, err := ValidHeader(r)
+	if err != nil {
+		return nil, err
+	}
+
+	var filename string
+	var options string
+	var payload io.Reader
+
+	if header.Filename > 0 {
+		filenameBuffer := make([]byte, header.Filename)
+		_, err = io.ReadFull(r, filenameBuffer)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read filename: %s", err)
+		}
+		filename = string(filenameBuffer)
+	}
+
+	if header.Options > 0 {
+		optionsBuffer := make([]byte, header.Options)
+		_, err = io.ReadFull(r, optionsBuffer)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read options: %s", err)
+		}
+		options = string(optionsBuffer)
+	}
+
+	if header.Payload > 0 {
+		payload = io.LimitReader(r, int64(header.Payload))
+	}
+
+	return &Data{
+		Header:   header,
+		Filename: filename,
+		Options:  options,
+		Payload:  payload,
+	}, nil
 }
 
 func (op OpCode) isValid() bool {
