@@ -8,7 +8,9 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 type Server struct {
@@ -64,14 +66,19 @@ func (s *Server) handleConnection(conn net.Conn) {
 		case Ping:
 			log.Println("Ping received")
 		case FileConvert:
-			s.receiveFile(conn, data.Filename, data.Payload, data.Header.Payload)
+			s.receiveFile(data.Filename, data.Payload, data.Header.Payload)
+			err = s.convert(conn, data.Filename, data.Options)
+			if err != nil {
+				log.Printf("error while converting file: %s\n", err)
+				break
+			}
 		case FileTransfer:
-			s.receiveFile(conn, data.Filename, data.Payload, data.Header.Payload)
+			s.receiveFile(data.Filename, data.Payload, data.Header.Payload)
 		}
 	}
 }
 
-func (s *Server) receiveFile(conn net.Conn, filename string, payload io.Reader, payloadSize uint32) {
+func (s *Server) receiveFile(filename string, payload io.Reader, payloadSize uint32) {
 	root, err := os.OpenRoot("./")
 	if err != nil {
 		fmt.Printf("Failed to openroot: %s\n", err)
@@ -98,4 +105,19 @@ func (s *Server) receiveFile(conn net.Conn, filename string, payload io.Reader, 
 		return
 	}
 
+}
+
+func (s *Server) convert(conn net.Conn, filename string, options string) error {
+	log.Printf("[CONVERT] %s [%s]", filename, conn.RemoteAddr())
+
+	args := strings.Split(options, " ")
+	cmd := exec.Command("ffmpeg", args...)
+
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[CONVERT][SUCCESS] %s [%s]", filename, conn.RemoteAddr())
+	return nil
 }

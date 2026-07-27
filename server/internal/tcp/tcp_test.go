@@ -37,7 +37,7 @@ func TestPing(t *testing.T) {
 	}
 }
 
-func TestFileTransfer(t *testing.T) {
+func TestFileConvert(t *testing.T) {
 	conn, err := net.Dial("tcp", "127.0.0.1:4296")
 	if err != nil {
 		t.Fatalf("Failed to dial server: %s", err)
@@ -55,19 +55,21 @@ func TestFileTransfer(t *testing.T) {
 		t.Fatalf("Failed to stat file: %s", err)
 	}
 
+	options := "-i test.mp4 -c:v av1_nvenc -b:v 8m -c:a copy testw.avi"
+
 	fileSize := fileStat.Size()
 	msg := WriteHeader(&Header{
 		Magic:    Magic,
 		Version:  Version,
-		Op:       FileTransfer,
+		Op:       FileConvert,
 		Filename: uint16(len(fileStat.Name())),
-		Options:  0,
+		Options:  uint16(len(options)),
 		Payload:  uint32(fileSize),
 	})
 
 	_, err = writer.Write(msg)
 	if err != nil {
-		t.Fatalf("Failed to write to the server: %s", err)
+		t.Fatalf("Failed to write header to the server: %s", err)
 	}
 
 	err = writer.Flush()
@@ -77,7 +79,12 @@ func TestFileTransfer(t *testing.T) {
 
 	_, err = writer.Write([]byte(fileStat.Name()))
 	if err != nil {
-		t.Fatalf("Failed to write to the server: %s", err)
+		t.Fatalf("Failed to write filename to the server: %s", err)
+	}
+
+	_, err = writer.Write([]byte(options))
+	if err != nil {
+		t.Fatalf("Failed to write options to the server: %s", err)
 	}
 	err = writer.Flush()
 	if err != nil {
