@@ -15,8 +15,8 @@ type OpCode byte
 const (
 	FileConvert  OpCode = 0x01
 	FileTransfer OpCode = 0x02
-	Ping         OpCode = 0x03
-	Ok           OpCode = 0x04
+	Processing   OpCode = 0x03
+	Err          OpCode = 0x04
 )
 
 type Header struct {
@@ -135,7 +135,7 @@ func Read(r io.Reader) (*Data, error) {
 
 func (op OpCode) isValid() bool {
 	switch op {
-	case FileConvert, FileTransfer, Ping, Ok:
+	case FileConvert, FileTransfer, Processing, Err:
 		return true
 	default:
 		return false
