@@ -67,10 +67,17 @@ func (s *Server) handleConnection(conn net.Conn) {
 			log.Println("Ping received")
 		case FileConvert:
 			s.receiveFile(data.Filename, data.Payload, data.Header.Payload)
+
 			err = s.convert(conn, data.Filename, data.Options)
 			if err != nil {
 				log.Printf("error while converting file: %s\n", err)
-				break
+				continue
+			}
+
+			err = s.sendFile(conn, data.Filename)
+			if err != nil {
+				log.Printf("error while sending back the file: %s\n", err)
+				continue
 			}
 		case FileTransfer:
 			s.receiveFile(data.Filename, data.Payload, data.Header.Payload)
@@ -119,5 +126,56 @@ func (s *Server) convert(conn net.Conn, filename string, options string) error {
 	}
 
 	log.Printf("[CONVERT][SUCCESS] %s [%s]", filename, conn.RemoteAddr())
+	return nil
+}
+
+func (s *Server) sendFile(conn net.Conn, filename string) error {
+	root, err := os.OpenRoot("./")
+	if err != nil {
+		return fmt.Errorf("failed to openroot: %s\n", err)
+	}
+
+	writer := bufio.NewWriter(conn)
+
+	file, err := root.Open(filename)
+	if err != nil {
+		return fmt.Errorf("failed to open file: %s", err)
+	}
+
+	fileStat, err := file.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to stat file: %s", err)
+	}
+
+	fileSize := fileStat.Size()
+	msg := WriteHeader(&Header{
+		Magic:    Magic,
+		Version:  Version,
+		Op:       FileTransfer,
+		Filename: uint16(len(fileStat.Name())),
+		Options:  0,
+		Payload:  uint32(fileSize),
+	})
+
+	_, err = writer.Write(msg)
+	if err != nil {
+		return fmt.Errorf("failed to write header: %s", err)
+	}
+
+	_, err = writer.Write([]byte(fileStat.Name()))
+	if err != nil {
+		return fmt.Errorf("failed to write filename: %s", err)
+	}
+
+	_, err = io.CopyN(writer, file, fileSize)
+	if err != nil {
+		return fmt.Errorf("failed to copy payload: %s", err)
+	}
+
+	err = writer.Flush()
+	if err != nil {
+		return fmt.Errorf("failed to flush: %s", err)
+	}
+
 	return nil
 }
