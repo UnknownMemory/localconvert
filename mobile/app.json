@@ -33,6 +33,23 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-font",
+        {
+          "android": {
+            "fonts": [
+              {
+                "fontFamily": "Abordage",
+                "fontDefinitions": [
+                  {
+                    "path": "./assets/fonts/Abordage-Regular.ttf"
+                  }
+                ]
+              }
+            ]
+          }
+        }
       ]
     ],
     "experiments": {

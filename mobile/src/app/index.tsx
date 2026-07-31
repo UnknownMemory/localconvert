@@ -1,74 +1,30 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Text, StyleSheet, View } from "react-native";
+import {SafeAreaView} from "react-native-safe-area-context";
 
-
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-import TcpSocket from 'react-native-tcp-socket';
-
-const options = {
-  port: 4296,
-  host: '192.168.1.233',
-  reuseAddress: true,
-};
-
-
-export default function HomeScreen() {
-
-  const client = TcpSocket.createConnection(options, () => {
-
-
-    client.destroy();
-  });
-
+export default function App() {
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-
-
-
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.info}>
+        <Text style={styles.text}>Not connected to the server</Text>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    backgroundColor:  "#F4E8DB",
+
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+  text: {
+    fontFamily: "Abordage",
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
+  info: {
+    borderRadius: 10,
+    backgroundColor: "#F58D33",
+    padding: 20,
+    width: '85%'
+  }
 });
