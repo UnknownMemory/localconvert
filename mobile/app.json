@@ -18,7 +18,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "unknownmemory.localconvert"
+      "package": "com.unknownmemory.localconvert"
     },
     "web": {
       "output": "static",
@@ -34,23 +34,9 @@
           "imageWidth": 76
         }
       ],
-      [
-        "expo-font",
-        {
-          "android": {
-            "fonts": [
-              {
-                "fontFamily": "Abordage",
-                "fontDefinitions": [
-                  {
-                    "path": "./assets/fonts/Abordage-Regular.ttf"
-                  }
-                ]
-              }
-            ]
-          }
-        }
-      ]
+      "expo-document-picker",
+      "expo-file-system",
+      "@react-native-vector-icons/feather"
     ],
     "experiments": {
       "typedRoutes": true,
