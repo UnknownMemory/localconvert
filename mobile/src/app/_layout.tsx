@@ -28,9 +28,9 @@ export default function RootLayout() {
 
   const headerBtn = () => {
     if (pathname != "/settings") {
-      return <Pressable onPress={() => router.push('/settings')}><Feather name="settings" size={20}></Feather></Pressable>
+      return <Pressable onPress={() => router.navigate('/settings')} hitSlop={20} style={{padding: 4}}><Feather name="settings" size={24}></Feather></Pressable>
     }
-    return <Pressable onPress={() => router.push('/')}><Feather name="arrow-left" size={20}></Feather></Pressable>
+    return <Pressable onPress={() => router.dismissTo('/')} hitSlop={20} style={{padding: 4}}><Feather name="arrow-left" size={24}></Feather></Pressable>
   }
 
   return (
