@@ -28,7 +28,7 @@ export const SettingsProvider = ({children}: {children: ReactNode}) => {
     const loadData = async () => {
         try {
             const data = await storage.getItem("SETTINGS")
-            
+
             if (data){
                 const jsonData: JSONSettings = JSON.parse(data)
                 if(jsonData.host != undefined){

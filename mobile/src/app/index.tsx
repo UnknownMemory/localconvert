@@ -1,8 +1,13 @@
-import { Text, StyleSheet, View } from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
 import {useState} from "react";
+import {Text, StyleSheet, View, Pressable} from "react-native";
+import {SafeAreaView} from "react-native-safe-area-context";
+import {DocumentPickerAsset, getDocumentAsync} from "expo-document-picker";
+
+import {Feather} from "@react-native-vector-icons/feather";
+
 import {THEME} from "@/app/constants";
 import {SettingsProvider} from "@/context/settings";
+import Card from "@/components/card";
 /*
 import TcpSocket from 'react-native-tcp-socket';
 
@@ -20,14 +25,30 @@ const client = TcpSocket.createConnection(options, () => {
 
 
 export default function App() {
-  const [isConnected, setIsConnected] = useState(false);
+    const [file, setFile] = useState<DocumentPickerAsset | undefined>(undefined);
+
+
+  const addFile = async () => {
+    const maxPayloadSize = 3n << 30n
+
+    const res = await getDocumentAsync({multiple: false, type: "video/*"})
+    if(!res.canceled){
+      const asset = res.assets[0]
+      const fileSize = BigInt(asset.size || 0)
+
+      if(fileSize < maxPayloadSize){
+        setFile(asset)
+      }
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.info}>
-        <View style={isConnected ? styles.badgeOn : styles.badgeOff}></View>
-        <Text style={styles.text}>Not connected to the server</Text>
-      </View>
+      {file ? <Card filename={file.name}/>: ""}
+
+      <Pressable style={styles.btn} onPress={addFile}>
+        <Feather name="plus" size={20}></Feather>
+      </Pressable>
     </SafeAreaView>
   );
 }
@@ -43,11 +64,15 @@ const styles = StyleSheet.create({
   text: {
     fontFamily: "Abordage",
   },
+  list: {
+    flex: 1,
+    width: "85%",
+  },
   info: {
     borderRadius: 12,
     backgroundColor: THEME.blue,
     padding: 20,
-    width: '85%',
+    width: '100%',
     flexDirection: "row",
     alignItems: "center"
   },
@@ -64,5 +89,13 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     marginRight: 5
-  }
+  },
+  btn: {
+    fontFamily: "Abordage",
+    borderRadius: 12,
+    backgroundColor: THEME.blue,
+    color: "#000",
+    padding: 16,
+    marginBottom: 35,
+  },
 });

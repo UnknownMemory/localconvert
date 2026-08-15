@@ -4,7 +4,6 @@ import {SafeAreaView} from "react-native-safe-area-context";
 import {SettingsContext} from "@/context/settings";
 import {useContext, useState} from "react";
 import {Directory} from "expo-file-system";
-import {brightness} from "@expo/ui/swift-ui/modifiers";
 
 
 export default function Settings() {
