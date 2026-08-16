@@ -1,33 +1,58 @@
-import {useState} from "react";
-import {Text, StyleSheet, View, Pressable} from "react-native";
+import {useContext, useState} from "react";
+import {Text, StyleSheet, Pressable} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {DocumentPickerAsset, getDocumentAsync} from "expo-document-picker";
 
+
+import TcpSocket from 'react-native-tcp-socket';
 import {Feather} from "@react-native-vector-icons/feather";
 
 import {THEME} from "@/app/constants";
-import {SettingsProvider} from "@/context/settings";
+import {SettingsContext} from "@/context/settings";
 import Card from "@/components/card";
-/*
-import TcpSocket from 'react-native-tcp-socket';
+import {MAGIC, OpCode, VERSION, Header, writeHeader, copyFile} from "@/protocol";
 
-const options = {
-  port: 4296,
-  host: '192.168.1.233',
-  reuseAddress: true,
-};
-const client = TcpSocket.createConnection(options, () => {
-
-
-
-});*/
-
-
+import { Buffer } from "buffer";
 
 export default function App() {
-    const [file, setFile] = useState<DocumentPickerAsset | undefined>(undefined);
+  const [file, setFile] = useState<DocumentPickerAsset | undefined>(undefined);
+  const settings = useContext(SettingsContext)
+
+  const options = {
+    port: Number(settings?.port),
+    host: settings?.host,
+    reuseAddress: true,
+  };
 
 
+
+  const sendFile = () => {
+    const client = TcpSocket.createConnection(options, () => {
+      if(!file){
+        return
+      }
+
+      const filenameSize = file.name.length
+      const fileSize = file.size
+      const options = "-i test.mp4 -c:v av1_nvenc -b:v 8m -c:a copy testw.avi"
+
+      if(fileSize !== undefined && filenameSize !== undefined){
+        const header: Header = {
+          Magic: MAGIC,
+          Version: VERSION,
+          Op: OpCode.FileConvert,
+          Filename: filenameSize,
+          Options: options.length,
+          Payload: fileSize
+        }
+        client.write(writeHeader(header))
+        client.write(Buffer.from(file.name))
+        client.write(Buffer.from(options))
+        copyFile(client, file.uri, fileSize)
+      }
+    });
+
+  }
   const addFile = async () => {
     const maxPayloadSize = 3n << 30n
 
@@ -49,6 +74,9 @@ export default function App() {
       <Pressable style={styles.btn} onPress={addFile}>
         <Feather name="plus" size={20}></Feather>
       </Pressable>
+      {file ?       <Pressable style={styles.btn} onPress={() => sendFile()}>
+        <Text>Convert</Text>
+      </Pressable>: ""}
     </SafeAreaView>
   );
 }

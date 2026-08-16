@@ -1,10 +1,11 @@
 import { Buffer } from 'buffer';
+import {File} from "expo-file-system";
+import TcpSocket from 'react-native-tcp-socket';
 
-
-const MAGIC = Buffer.from(['L'.charCodeAt(0), 'C'.charCodeAt(0)])
-const VERSION = 1
-const HEADER_SIZE = 12
-const MAX_FILENAME_SIZE = 255
+export const MAGIC = Buffer.from(['L'.charCodeAt(0), 'C'.charCodeAt(0)])
+export const VERSION = 1
+export const HEADER_SIZE = 12
+export const MAX_FILENAME_SIZE = 255
 
 export enum OpCode {
     FileConvert = 0x01,
@@ -13,7 +14,7 @@ export enum OpCode {
     Err = 0x04
 }
 
-interface Header {
+export interface Header {
     Magic: Buffer,
     Version: number,
     Op: OpCode,
@@ -29,7 +30,7 @@ interface Data {
     Payload: Buffer
 }
 
-function writeHeader(h: Header): Buffer {
+export function writeHeader(h: Header): Buffer {
     let buf = Buffer.alloc(HEADER_SIZE)
     buf[0] = h.Magic[0]
     buf[1] = h.Magic[1]
@@ -41,4 +42,18 @@ function writeHeader(h: Header): Buffer {
     buf.writeUInt32LE(h.Payload, 8)
 
     return buf
+}
+
+export function copyFile(client: TcpSocket.Socket, file: string, fileSize: number) {
+    const chunkSize = 64 * 1024
+    let offset = 0
+
+    const f = new File(file)
+    const fileHandle = f.open()
+
+    while(offset < fileSize){
+        const bytesR = fileHandle.readBytes(chunkSize)
+        client.write(Buffer.from(bytesR))
+        offset += bytesR.length
+    }
 }
