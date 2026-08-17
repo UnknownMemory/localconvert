@@ -44,6 +44,10 @@ export function writeHeader(h: Header): Buffer {
     return buf
 }
 
+/*function validHeader(reader) (h: Header) {
+
+}*/
+
 export function copyFile(client: TcpSocket.Socket, file: string, fileSize: number) {
     const chunkSize = 64 * 1024
     let offset = 0

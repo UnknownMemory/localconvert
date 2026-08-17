@@ -3,56 +3,21 @@ import {Text, StyleSheet, Pressable} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {DocumentPickerAsset, getDocumentAsync} from "expo-document-picker";
 
-
 import TcpSocket from 'react-native-tcp-socket';
 import {Feather} from "@react-native-vector-icons/feather";
 
 import {THEME} from "@/app/constants";
 import {SettingsContext} from "@/context/settings";
 import Card from "@/components/card";
-import {MAGIC, OpCode, VERSION, Header, writeHeader, copyFile} from "@/protocol";
+import {useTCP} from "@/hooks/useTCP";
 
-import { Buffer } from "buffer";
 
 export default function App() {
   const [file, setFile] = useState<DocumentPickerAsset | undefined>(undefined);
   const settings = useContext(SettingsContext)
 
-  const options = {
-    port: Number(settings?.port),
-    host: settings?.host,
-    reuseAddress: true,
-  };
+  const {sendFile, status} = useTCP(Number(settings?.port), settings?.host)
 
-
-
-  const sendFile = () => {
-    const client = TcpSocket.createConnection(options, () => {
-      if(!file){
-        return
-      }
-
-      const filenameSize = file.name.length
-      const fileSize = file.size
-      const options = "-i test.mp4 -c:v av1_nvenc -b:v 8m -c:a copy testw.avi"
-
-      if(fileSize !== undefined && filenameSize !== undefined){
-        const header: Header = {
-          Magic: MAGIC,
-          Version: VERSION,
-          Op: OpCode.FileConvert,
-          Filename: filenameSize,
-          Options: options.length,
-          Payload: fileSize
-        }
-        client.write(writeHeader(header))
-        client.write(Buffer.from(file.name))
-        client.write(Buffer.from(options))
-        copyFile(client, file.uri, fileSize)
-      }
-    });
-
-  }
   const addFile = async () => {
     const maxPayloadSize = 3n << 30n
 
@@ -69,12 +34,12 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {file ? <Card filename={file.name}/>: ""}
+      {file ? <Card filename={file.name} currStatus={status}/>: ""}
 
       <Pressable style={styles.btn} onPress={addFile}>
         <Feather name="plus" size={20}></Feather>
       </Pressable>
-      {file ?       <Pressable style={styles.btn} onPress={() => sendFile()}>
+      {file ?       <Pressable style={styles.btn} onPress={() => sendFile(file)}>
         <Text>Convert</Text>
       </Pressable>: ""}
     </SafeAreaView>
