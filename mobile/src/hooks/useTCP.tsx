@@ -1,51 +1,110 @@
-import {useState} from "react";
+import { useState } from "react";
 import TcpSocket from "react-native-tcp-socket";
-import {DocumentPickerAsset} from "expo-document-picker";
+import { Directory, File, Paths } from "expo-file-system";
+import { DocumentPickerAsset } from "expo-document-picker";
 
-import {MAGIC, OpCode, VERSION, Header, writeHeader, copyFile} from "@/protocol";
+import { MAGIC, OpCode, VERSION, Header, writeHeader, read, HEADER_SIZE, validHeader } from "@/protocol";
 import { Buffer } from "buffer";
 
 export enum Status {
-    DISCONNECTED=0,
-    SENDING=1,
-    CONVERTING=2,
-    ERR=3
+    DISCONNECTED = 0,
+    SENDING = 1,
+    CONVERTING = 2,
+    ERR = 3,
 }
 
-
-export function useTCP(port: number, host: string | undefined) {
-    const [status, setStatus] = useState<Status>(Status.DISCONNECTED)
+export function useTCP(port: number, host: string | undefined, outputFolder: string | undefined) {
+    const [status, setStatus] = useState<Status>(Status.DISCONNECTED);
 
     const sendFile = (file: DocumentPickerAsset | undefined) => {
-        const client = TcpSocket.createConnection({port: port, host: host, reuseAddress: true}, () => {});
+        let buffer = Buffer.alloc(0);
+        let header: Header | null = null;
+
+        const client = TcpSocket.createConnection({ port: port, host: host, reuseAddress: true }, () => {});
 
         client.on("connect", () => {
-            if(!file){
-                return
+            if (!file) {
+                return;
             }
 
-            setStatus(Status.SENDING)
+            setStatus(Status.SENDING);
 
-            const filenameSize = file.name.length
-            const fileSize = file.size
-            const options = "-i test.mp4 -c:v av1_nvenc -b:v 8m -c:a copy testw.avi"
+            const filenameSize = file.name.length;
+            const fileSize = file.size;
+            const options = "-i test.mp4 -c:v av1_nvenc -b:v 8m -c:a copy testw.avi";
 
-            if(fileSize !== undefined && filenameSize !== undefined){
+            if (fileSize !== undefined && filenameSize !== undefined) {
                 const header: Header = {
                     Magic: MAGIC,
                     Version: VERSION,
                     Op: OpCode.FileConvert,
                     Filename: filenameSize,
                     Options: options.length,
-                    Payload: fileSize
-                }
-                client.write(writeHeader(header))
-                client.write(Buffer.from(file.name))
-                client.write(Buffer.from(options))
-                copyFile(client, file.uri, fileSize)
+                    Payload: fileSize,
+                };
+                client.write(writeHeader(header));
+                client.write(Buffer.from(file.name));
+                client.write(Buffer.from(options));
+                copyFile(client, file.uri, fileSize);
             }
-        })
-    }
+        });
 
-    return {sendFile, status}
+        client.on("data", (data) => {
+            if (Buffer.isBuffer(data)) {
+                buffer = Buffer.concat([buffer, data]);
+                while (true) {
+                    if (header === null) {
+                        if (buffer.length < HEADER_SIZE) {
+                            break;
+                        }
+
+                        header = validHeader(buffer);
+                        buffer = Buffer.from(buffer.subarray(HEADER_SIZE));
+                    }
+
+                    if (header !== null) {
+                        const payloadLength = header.Filename + header.Options + header.Payload;
+                        if (header && buffer.length < payloadLength) {
+                            break;
+                        }
+
+                        const fileData = read(buffer, header);
+                        header = null;
+                        buffer = Buffer.from(buffer.subarray(payloadLength));
+
+                        receiveFile(outputFolder, fileData.Filename, fileData.Payload);
+                    }
+                }
+            }
+        });
+    };
+
+    return { sendFile, status };
+}
+
+function copyFile(client: TcpSocket.Socket, file: string, fileSize: number) {
+    const chunkSize = 64 * 1024;
+    let offset = 0;
+
+    const f = new File(file);
+    const fileHandle = f.open();
+
+    while (offset < fileSize) {
+        const bytesR = fileHandle.readBytes(chunkSize);
+        client.write(Buffer.from(bytesR));
+        offset += bytesR.length;
+    }
+}
+
+function receiveFile(uri: string, filename: string, payload: Buffer) {
+    const safeFilename = filename.split("/").pop()!.split("\\").pop()!;
+    const file = new File(Paths.cache, safeFilename);
+    if (file.exists) {
+        file.delete();
+    }
+    file.create();
+    file.write(payload);
+
+    const ouput = new Directory(uri);
+    file.move(ouput, { overwrite: true });
 }

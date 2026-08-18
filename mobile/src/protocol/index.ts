@@ -1,11 +1,11 @@
 import { Buffer } from 'buffer';
-import {File} from "expo-file-system";
-import TcpSocket from 'react-native-tcp-socket';
 
-export const MAGIC = Buffer.from(['L'.charCodeAt(0), 'C'.charCodeAt(0)])
+
+export const MAGIC = Buffer.from("LC")
 export const VERSION = 1
 export const HEADER_SIZE = 12
 export const MAX_FILENAME_SIZE = 255
+const MAX_PAYLOAD_SIZE = 3n << 30n
 
 export enum OpCode {
     FileConvert = 0x01,
@@ -44,20 +44,75 @@ export function writeHeader(h: Header): Buffer {
     return buf
 }
 
-/*function validHeader(reader) (h: Header) {
+export function validHeader(headerBuffer: Buffer): Header {
 
-}*/
-
-export function copyFile(client: TcpSocket.Socket, file: string, fileSize: number) {
-    const chunkSize = 64 * 1024
-    let offset = 0
-
-    const f = new File(file)
-    const fileHandle = f.open()
-
-    while(offset < fileSize){
-        const bytesR = fileHandle.readBytes(chunkSize)
-        client.write(Buffer.from(bytesR))
-        offset += bytesR.length
+    const header: Header = {
+        Magic: Buffer.from(headerBuffer.subarray(0, 2)),
+        Version: headerBuffer[2],
+        Op: headerBuffer[3],
+        Filename: headerBuffer.readInt16LE(4),
+        Options: headerBuffer.readInt16LE(6),
+        Payload: headerBuffer.readInt32LE(8)
     }
+
+
+    if (!header.Magic.equals(MAGIC)) {
+        throw new Error("Invalid magic byte.")
+    }
+
+    if (header.Version != VERSION) {
+        throw new Error("Invalid version.")
+    }
+
+    if (!isOpValid(header.Op)) {
+        throw new Error("Invalid opcode.")
+    }
+
+    if (header.Filename > MAX_FILENAME_SIZE) {
+        throw new Error("Filename is too long.")
+    }
+
+    if (header.Payload > MAX_PAYLOAD_SIZE) {
+        throw new Error("Payload is too big.")
+    }
+
+    return header
+}
+
+export function read(buf: Buffer, header: Header) {
+    let data: Data;
+    let filename: string = "";
+    let options: string = "";
+    let payload: Buffer = new Buffer(0);
+
+    if (header.Filename > 0) {
+        filename = new TextDecoder('utf-8').decode(buf.subarray(0, header.Filename))
+
+        buf = Buffer.from(buf.subarray(header.Filename))
+    }
+
+    if (header.Options > 0) {
+        const optionsBuffer = buf.subarray(0, header.Options)
+        options = optionsBuffer.toString()
+
+        buf = Buffer.from(buf.subarray(header.Options))
+    }
+
+    if (header.Payload > 0) {
+        payload = Buffer.from(buf.subarray(0, header.Payload))
+    }
+
+    data = {
+        Header: header,
+        Filename: filename,
+        Options: options,
+        Payload: payload
+    }
+
+    return data
+}
+
+
+function isOpValid(op: OpCode): boolean {
+    return Object.values(OpCode).includes(op)
 }
