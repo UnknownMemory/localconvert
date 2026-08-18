@@ -10,7 +10,9 @@ export enum Status {
     DISCONNECTED = 0,
     SENDING = 1,
     CONVERTING = 2,
-    ERR = 3,
+    RECEIVING = 3,
+    DONE = 4,
+    ERR = 5,
 }
 
 export function useTCP(port: number, host: string | undefined, outputFolder: string | undefined) {
@@ -49,7 +51,7 @@ export function useTCP(port: number, host: string | undefined, outputFolder: str
             }
         });
 
-        client.on("data", (data) => {
+        client.on("data", async (data) => {
             if (Buffer.isBuffer(data)) {
                 buffer = Buffer.concat([buffer, data]);
                 while (true) {
@@ -72,7 +74,19 @@ export function useTCP(port: number, host: string | undefined, outputFolder: str
                         header = null;
                         buffer = Buffer.from(buffer.subarray(payloadLength));
 
-                        receiveFile(outputFolder, fileData.Filename, fileData.Payload);
+                        switch (fileData.Header.Op){
+                            case OpCode.FileTransfer:
+                                setStatus(Status.RECEIVING)
+                                await receiveFile(outputFolder, fileData.Filename, fileData.Payload);
+                                setStatus(Status.DONE)
+                                break
+                            case OpCode.Processing:
+                                setStatus(Status.CONVERTING)
+                                break
+                            default:
+                                break
+                        }
+
                     }
                 }
             }
@@ -96,15 +110,13 @@ function copyFile(client: TcpSocket.Socket, file: string, fileSize: number) {
     }
 }
 
-function receiveFile(uri: string, filename: string, payload: Buffer) {
-    const safeFilename = filename.split("/").pop()!.split("\\").pop()!;
-    const file = new File(Paths.cache, safeFilename);
-    if (file.exists) {
-        file.delete();
-    }
-    file.create();
+async function receiveFile(uri: string, filename: string, payload: Buffer) {
+    const file = new File(Paths.cache, filename);
+
+    file.create({ overwrite: true });
     file.write(payload);
 
-    const ouput = new Directory(uri);
-    file.move(ouput, { overwrite: true });
+    const output = new Directory(uri);
+    await file.move(output, { overwrite: true });
+
 }

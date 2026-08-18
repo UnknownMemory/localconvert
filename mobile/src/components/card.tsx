@@ -6,6 +6,8 @@ const StatusText: Record<Status, string> = {
     [Status.DISCONNECTED]: "",
     [Status.SENDING]: "Sending file...",
     [Status.CONVERTING]: "Converting file...",
+    [Status.RECEIVING]: "Receiving file...",
+    [Status.DONE]: "Task completed",
     [Status.ERR]: "An error as occurred"
 }
 
