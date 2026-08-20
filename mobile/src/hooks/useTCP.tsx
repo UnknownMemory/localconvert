@@ -18,7 +18,7 @@ export enum Status {
 export function useTCP(port: number, host: string | undefined, outputFolder: string | undefined) {
     const [status, setStatus] = useState<Status>(Status.DISCONNECTED);
 
-    const sendFile = (file: DocumentPickerAsset | undefined) => {
+    const sendFile = (file: DocumentPickerAsset | undefined, options: string) => {
         let buffer = Buffer.alloc(0);
         let header: Header | null = null;
 
@@ -33,7 +33,6 @@ export function useTCP(port: number, host: string | undefined, outputFolder: str
 
             const filenameSize = file.name.length;
             const fileSize = file.size;
-            const options = "-i test.mp4 -c:v av1_nvenc -b:v 8m -c:a copy testw.avi";
 
             if (fileSize !== undefined && filenameSize !== undefined) {
                 const header: Header = {

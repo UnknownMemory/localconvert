@@ -37,7 +37,6 @@ export default function RootLayout() {
       <SettingsProvider>
         <Stack screenOptions={
       {
-        title: pathname != "/settings" ? "localconvert" : "settings",
         headerStyle: {backgroundColor: THEME.primary},
         headerTitleStyle: {fontWeight: "700"},
         headerTitleAlign: "center",

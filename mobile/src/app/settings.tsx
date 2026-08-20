@@ -4,6 +4,7 @@ import {SafeAreaView} from "react-native-safe-area-context";
 import {SettingsContext} from "@/context/settings";
 import {useContext, useState} from "react";
 import {Directory} from "expo-file-system";
+import {Stack, useNavigation} from "expo-router";
 
 
 export default function Settings() {
@@ -27,6 +28,8 @@ export default function Settings() {
     const isActive = hostInput != settings?.host || portInput != settings?.port || outputInput != settings?.outputFolder;
 
     return (
+        <>
+        <Stack.Screen options={{ title: "settings" }} />
         <SafeAreaView style={styles.container}>
             <TextInput style={styles.input} onChangeText={setHostInput} value={hostInput}></TextInput>
             <TextInput style={styles.input} onChangeText={setPortInput} value={portInput} keyboardType="numeric"></TextInput>
@@ -38,6 +41,7 @@ export default function Settings() {
                 <Text style={{textAlign: "center", fontFamily: "Abordage"}}>Save</Text>
             </Pressable>
         </SafeAreaView>
+        </>
     )
 }
 

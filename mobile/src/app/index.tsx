@@ -10,11 +10,17 @@ import { THEME } from "@/app/constants";
 import { SettingsContext } from "@/context/settings";
 import Card from "@/components/card";
 import { useTCP } from "@/hooks/useTCP";
+import {Stack, useNavigation} from "expo-router";
 
 export default function App() {
     const [file, setFile] = useState<DocumentPickerAsset | undefined>(undefined);
-    const settings = useContext(SettingsContext);
+    const [outputName, setOutputName] = useState<string>("")
+    const [format, setFormat] = useState<string>("mkv")
+    const [bitrate, setBitrate] = useState<string>("8m")
 
+    const options = `-i ${file?.name} -c:v av1_nvenc -b:v ${bitrate} -c:a copy ${outputName+"."+format}`
+
+    const settings = useContext(SettingsContext);
     const { sendFile, status } = useTCP(Number(settings?.port), settings?.host, settings?.outputFolder);
 
     const addFile = async () => {
@@ -27,25 +33,36 @@ export default function App() {
 
             if (fileSize < maxPayloadSize) {
                 setFile(asset);
+                setOutputName(asset.name.substring(0, asset.name.lastIndexOf(".")) + "_output")
             }
         }
     };
 
     return (
+        <>
+        <Stack.Screen options={{ title: "localconvert" }} />
         <SafeAreaView style={styles.container}>
-            {file ? <Card filename={file.name} currStatus={status} /> : ""}
+            {file && <Card filename={file.name}
+                           currStatus={status}
+                           outputName={outputName}
+                           setOutputName={setOutputName}
+                           format={format}
+                           setFormat={setFormat}
+                           bitrate={bitrate}
+                           setBitrate={setBitrate}/>}
 
             <Pressable style={styles.btn} onPress={addFile}>
                 <Feather name="plus" size={20}></Feather>
             </Pressable>
             {file ? (
-                <Pressable style={styles.btn} onPress={() => sendFile(file)}>
+                <Pressable style={styles.btn} onPress={() => sendFile(file, options)}>
                     <Text>Convert</Text>
                 </Pressable>
             ) : (
                 ""
             )}
         </SafeAreaView>
+        </>
     );
 }
 
