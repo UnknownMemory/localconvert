@@ -85,7 +85,9 @@ func (s *Server) operation(data *Data, conn net.Conn) error {
 			return fmt.Errorf("error while converting file: %w", err)
 		}
 
-		err = s.sendFile(conn, data.Filename)
+		fields := strings.Fields(data.Options)
+		outputFilename := fields[len(fields)-1]
+		err = s.sendFile(conn, outputFilename)
 		if err != nil {
 			return fmt.Errorf("error while sending back the file: %w", err)
 
