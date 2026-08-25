@@ -2,7 +2,7 @@
   "expo": {
     "name": "localconvert",
     "slug": "localconvert",
-    "version": "1.0.0",
+    "version": "0.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "localconvert",
@@ -16,7 +16,12 @@
         "backgroundColor": "#ECECEC"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.unknownmemory.localconvert"
+      "package": "com.unknownmemory.localconvert",
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.INTERNET"
+      ]
     },
     "web": {
       "output": "static",
@@ -39,6 +44,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a3997150-2508-4f22-8c87-620be3ad7400"
+      }
     }
   }
 }
