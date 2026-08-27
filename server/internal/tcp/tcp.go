@@ -21,7 +21,7 @@ type Server struct {
 func NewServer(addr string) *Server {
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err)
+		log.Printf("Error: %s\n", err)
 	}
 
 	return &Server{
@@ -31,7 +31,7 @@ func NewServer(addr string) *Server {
 }
 
 func (s *Server) Run() {
-	fmt.Printf("Server is running on %s\n", s.listener.Addr())
+	log.Printf("Server is running on %s\n", s.listener.Addr())
 	s.accept()
 }
 
@@ -40,7 +40,7 @@ func (s *Server) accept() {
 	for {
 		conn, err := s.listener.Accept()
 		if err != nil {
-			fmt.Printf("Failed to accept connection: %s\n", err)
+			log.Printf("Failed to accept connection: %s\n", err)
 		}
 
 		go s.handleConnection(conn)
@@ -57,14 +57,14 @@ func (s *Server) handleConnection(conn net.Conn) {
 		data, err := Read(reader)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
-				fmt.Printf("Reading error: %s\n", err)
+				log.Printf("Reading error: %s\n", err)
 			}
 			break
 		}
 
 		err = s.operation(data, conn)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			s.sendStatus(conn, Err)
 		}
 	}
@@ -75,27 +75,26 @@ func (s *Server) operation(data *Data, conn net.Conn) error {
 	case FileConvert:
 		err := s.receiveFile(conn, data.Filename, data.Payload, data.Header.Payload)
 		if err != nil {
-			return fmt.Errorf("error while receiving file: %w", err)
+			return fmt.Errorf("receiving file: %w", err)
 		}
 
 		s.sendStatus(conn, Processing)
-
 		err = s.convert(conn, data.Filename, data.Options)
 		if err != nil {
-			return fmt.Errorf("error while converting file: %w", err)
+			return fmt.Errorf("converting file: %w", err)
 		}
 
 		fields := strings.Fields(data.Options)
 		outputFilename := fields[len(fields)-1]
 		err = s.sendFile(conn, outputFilename)
 		if err != nil {
-			return fmt.Errorf("error while sending back the file: %w", err)
+			return fmt.Errorf("sending back file: %w", err)
 
 		}
 	case FileTransfer:
 		err := s.receiveFile(conn, data.Filename, data.Payload, data.Header.Payload)
 		if err != nil {
-			return fmt.Errorf("error while receiving file: %w", err)
+			return fmt.Errorf("receiving file: %w", err)
 		}
 	default:
 		return fmt.Errorf("unknown operation code")
@@ -217,12 +216,12 @@ func (s *Server) sendStatus(conn net.Conn, status OpCode) {
 
 	_, err := writer.Write(msg)
 	if err != nil {
-		fmt.Printf("Failed to write status: %w", err)
+		log.Printf("Failed to write status: %w", err)
 		return
 	}
 
 	err = writer.Flush()
 	if err != nil {
-		fmt.Printf("failed to flush: %w", err)
+		log.Printf("failed to flush: %w", err)
 	}
 }
