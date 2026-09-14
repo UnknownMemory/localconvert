@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { Text, StyleSheet, Pressable } from "react-native";
+import {Text, StyleSheet, Pressable, View} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { DocumentPickerAsset, getDocumentAsync } from "expo-document-picker";
 
@@ -42,14 +42,14 @@ export default function App() {
         <>
         <Stack.Screen options={{ title: "localconvert" }} />
         <SafeAreaView style={styles.container}>
-            {file && <Card filename={file.name}
+            {file ? <Card filename={file.name}
                            currStatus={status}
                            outputName={outputName}
                            setOutputName={setOutputName}
                            format={format}
                            setFormat={setFormat}
                            bitrate={bitrate}
-                           setBitrate={setBitrate}/>}
+                          setBitrate={setBitrate}/> : <View style={styles.container}><Text>Select a file</Text></View>}
 
             <Pressable style={styles.btn} onPress={addFile}>
                 <Feather name="plus" size={20}></Feather>

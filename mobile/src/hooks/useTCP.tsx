@@ -19,7 +19,8 @@ export function useTCP(port: number, host: string | undefined, outputFolder: str
     const [status, setStatus] = useState<Status>(Status.DISCONNECTED);
 
     const sendFile = (file: DocumentPickerAsset | undefined, options: string) => {
-        let buffer = Buffer.alloc(0);
+        let chunks : Buffer[]= [];
+        let bufferedLength = 0;
         let header: Header | null = null;
 
         const client = TcpSocket.createConnection({ port: port, host: host, reuseAddress: true }, () => {});
@@ -51,42 +52,57 @@ export function useTCP(port: number, host: string | undefined, outputFolder: str
         });
 
         client.on("data", async (data) => {
-            if (Buffer.isBuffer(data)) {
-                buffer = Buffer.concat([buffer, data]);
-                while (true) {
-                    if (header === null) {
-                        if (buffer.length < HEADER_SIZE) {
-                            break;
-                        }
+            if (!Buffer.isBuffer(data)) return;
 
-                        header = validHeader(buffer);
-                        buffer = Buffer.from(buffer.subarray(HEADER_SIZE));
+            chunks.push(data)
+            bufferedLength += data.length
+
+            while (true) {
+                if (header === null) {
+                    if (bufferedLength < HEADER_SIZE) {
+                        break;
                     }
 
-                    if (header !== null) {
-                        const payloadLength = header.Filename + header.Options + header.Payload;
-                        if (header && buffer.length < payloadLength) {
-                            break;
-                        }
+                    const buffer = Buffer.concat(chunks, bufferedLength);
+                    header = validHeader(buffer);
+                    const chunksRest = buffer.subarray(HEADER_SIZE) as Buffer;
 
-                        const fileData = read(buffer, header);
-                        header = null;
-                        buffer = Buffer.from(buffer.subarray(payloadLength));
+                    chunks = [chunksRest]
+                    bufferedLength = chunksRest.length;
+                }
 
-                        switch (fileData.Header.Op){
-                            case OpCode.FileTransfer:
+                if (header !== null) {
+                    const payloadLength = header.Filename + header.Options + header.Payload;
+                    if (header && bufferedLength < payloadLength) {
+                        break;
+                    }
+
+                    const buffer = Buffer.concat(chunks, bufferedLength);
+                    const fileData = read(buffer, header);
+                    header = null;
+                    const chunksRest = buffer.subarray(payloadLength) as Buffer;
+
+                    chunks = [chunksRest]
+                    bufferedLength = chunksRest.length;
+
+                    switch (fileData.Header.Op){
+                        case OpCode.FileTransfer:
+                            client.pause()
+                            try {
                                 setStatus(Status.RECEIVING)
                                 await receiveFile(outputFolder, fileData.Filename, fileData.Payload);
                                 setStatus(Status.DONE)
-                                break
-                            case OpCode.Processing:
-                                setStatus(Status.CONVERTING)
-                                break
-                            default:
-                                break
-                        }
-
+                            } finally {
+                                client.resume()
+                            }
+                            break
+                        case OpCode.Processing:
+                            setStatus(Status.CONVERTING)
+                            break
+                        default:
+                            break
                     }
+
                 }
             }
         });
