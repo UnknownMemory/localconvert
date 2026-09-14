@@ -7,7 +7,7 @@ import { DocumentPickerAsset, getDocumentAsync } from "expo-document-picker";
 import { THEME } from "@/app/constants";
 import { SettingsContext } from "@/context/settings";
 import Card from "@/components/card";
-import { useTCP, Status } from "@/hooks/useTCP";
+import { useTCP } from "@/hooks/useTCP";
 
 
 export default function App() {

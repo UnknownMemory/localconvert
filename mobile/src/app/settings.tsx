@@ -23,6 +23,8 @@ export default function Settings() {
             const outputDir = dir.createDirectory("localconvert")
             setOuputInput(outputDir.uri)
         }
+
+        setOuputInput(dir.uri + "localconvert")
     }
 
     const isActive = hostInput != settings?.host || portInput != settings?.port || outputInput != settings?.outputFolder;
