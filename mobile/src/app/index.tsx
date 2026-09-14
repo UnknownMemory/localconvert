@@ -1,16 +1,14 @@
 import { useContext, useState } from "react";
+import {Stack} from "expo-router";
 import {Text, StyleSheet, Pressable, View} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { DocumentPickerAsset, getDocumentAsync } from "expo-document-picker";
 
-import TcpSocket from "react-native-tcp-socket";
-import { Feather } from "@react-native-vector-icons/feather";
-
 import { THEME } from "@/app/constants";
 import { SettingsContext } from "@/context/settings";
 import Card from "@/components/card";
-import { useTCP } from "@/hooks/useTCP";
-import {Stack, useNavigation} from "expo-router";
+import { useTCP, Status } from "@/hooks/useTCP";
+
 
 export default function App() {
     const [file, setFile] = useState<DocumentPickerAsset | undefined>(undefined);
@@ -49,18 +47,20 @@ export default function App() {
                            format={format}
                            setFormat={setFormat}
                            bitrate={bitrate}
-                          setBitrate={setBitrate}/> : <View style={styles.container}><Text>Select a file</Text></View>}
+                          setBitrate={setBitrate}/> : <View style={{flex: 1,alignItems: "center", justifyContent: "center"}}><Text style={styles.text}>Select a file</Text></View>}
 
+            <View style={{flexDirection: "row", gap: 15}}>
             <Pressable style={styles.btn} onPress={addFile}>
-                <Feather name="plus" size={20}></Feather>
+                <Text>Add file</Text>
             </Pressable>
             {file ? (
                 <Pressable style={styles.btn} onPress={() => sendFile(file, options)}>
-                    <Text>Convert</Text>
+                    <Text>Convert file</Text>
                 </Pressable>
             ) : (
                 ""
             )}
+            </View>
         </SafeAreaView>
         </>
     );
@@ -74,6 +74,7 @@ const styles = StyleSheet.create({
     },
     text: {
         fontFamily: "Abordage",
+        fontSize: 16,
     },
     list: {
         flex: 1,
