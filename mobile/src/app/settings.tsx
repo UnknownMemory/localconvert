@@ -72,13 +72,13 @@ const styles = StyleSheet.create({
     saveBtn: {
         fontFamily: "Abordage",
         borderRadius: 12,
-        backgroundColor: THEME.purple,
+        backgroundColor: THEME.blue,
         color: "#000",
         padding: 20,
         width: '85%',
         marginBottom: 15,
     },
     saveBtnInactive: {
-        backgroundColor: THEME.darkPurple,
+        backgroundColor: THEME.darkBlue,
     }
 });
