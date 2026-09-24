@@ -14,19 +14,21 @@ import (
 )
 
 type Server struct {
-	Addr     string
-	listener net.Listener
+	Addr         string
+	outputFolder string
+	listener     net.Listener
 }
 
-func NewServer(addr string) *Server {
+func NewServer(addr string, outputFolder string) *Server {
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Printf("Error: %s\n", err)
 	}
 
 	return &Server{
-		Addr:     addr,
-		listener: listener,
+		Addr:         addr,
+		outputFolder: outputFolder,
+		listener:     listener,
 	}
 }
 
@@ -106,7 +108,7 @@ func (s *Server) operation(data *Data, conn net.Conn) error {
 func (s *Server) receiveFile(conn net.Conn, filename string, payload io.Reader, payloadSize uint32) error {
 	log.Printf("[TRANSFER] Receiving %s [%s]", filename, conn.RemoteAddr())
 
-	root, err := os.OpenRoot("./")
+	root, err := os.OpenRoot(s.outputFolder)
 	if err != nil {
 		return fmt.Errorf("failed to openroot: %w", err)
 	}
@@ -136,6 +138,10 @@ func (s *Server) convert(conn net.Conn, filename string, options string) error {
 	log.Printf("[CONVERT] %s [%s]", filename, conn.RemoteAddr())
 
 	args := strings.Split(options, " ")
+	convertedFilename := args[len(args)-1]
+	args[1] = s.outputFolder + "/" + args[1]
+	args[len(args)-1] = s.outputFolder + "/" + convertedFilename
+
 	cmd := exec.Command("ffmpeg", args...)
 
 	err := cmd.Run()
@@ -150,7 +156,7 @@ func (s *Server) convert(conn net.Conn, filename string, options string) error {
 func (s *Server) sendFile(conn net.Conn, filename string) error {
 	log.Printf("[TRANSFER] Sending %s [%s]", filename, conn.RemoteAddr())
 
-	root, err := os.OpenRoot("./")
+	root, err := os.OpenRoot(s.outputFolder)
 	if err != nil {
 		return fmt.Errorf("failed to openroot: %w", err)
 	}

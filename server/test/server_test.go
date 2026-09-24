@@ -13,7 +13,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	s := tcp.NewServer("127.0.0.1:4296")
+	s := tcp.NewServer("127.0.0.1:4296", "../output")
 	go s.Run()
 
 	exitCode := m.Run()
