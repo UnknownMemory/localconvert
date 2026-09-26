@@ -35,7 +35,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	err = os.MkdirAll(conf.OutputFolder, 0755)
 	if err != nil {
 		log.Fatal(err)

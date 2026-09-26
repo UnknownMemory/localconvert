@@ -33,5 +33,5 @@
 |--------------|------- |----------------------------------------------------------|
 | FileConvert  | 0x01   | Conversion de fichier                                    |
 | FileTransfer | 0x02   | Transmission/Réception de fichier                        |
-| Processing   | 0x03   | Signalement d'un traitement de fichier au un client      |
+| Processing   | 0x03   | Signalement d'un traitement de fichier au client         |
 | Error        | 0x04   | Signalement d'une erreur serveur                         |
