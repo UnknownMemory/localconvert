@@ -43,3 +43,4 @@ example
 .idea
 
 output
+*.exe

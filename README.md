@@ -1,4 +1,6 @@
 # localconvert
+[![en](https://img.shields.io/badge/lang-English-blue)](README.md)
+[![fr](https://img.shields.io/badge/lang-Français-red)](README.fr-FR.md)
 ## Protocol
 ### Packet
 ```
