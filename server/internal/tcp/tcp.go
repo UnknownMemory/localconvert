@@ -194,7 +194,8 @@ func (s *Server) sendFile(conn net.Conn, filename string) error {
 		return fmt.Errorf("failed to write filename: %w", err)
 	}
 
-	_, err = io.CopyN(writer, file, fileSize)
+	buffer := make([]byte, 512*1024)
+	_, err = io.CopyBuffer(writer, file, buffer)
 	if err != nil {
 		return fmt.Errorf("failed to copy payload: %w", err)
 	}
