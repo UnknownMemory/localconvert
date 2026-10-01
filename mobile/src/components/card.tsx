@@ -37,7 +37,7 @@ export default function Card({filename, currStatus, outputName, setOutputName, f
         <View style={styles.container}>
             <View style={styles.info}>
                 <Text style={styles.text}>{filename}</Text>
-                <Text>{StatusText[currStatus]}</Text>
+                <Text style={[currStatus === Status.ERR ? styles.error : ""]}>{StatusText[currStatus]}</Text>
             </View>
             <View style={{flexDirection: "row", gap: 15, marginTop: 20, flexWrap: "wrap"}}>
                 {textInput("Output", "70%", outputName, setOutputName)}
@@ -75,4 +75,7 @@ const styles = StyleSheet.create({
         width: '85%',
         marginBottom: 15,
     },
+    error: {
+        color: THEME.red
+    }
 })

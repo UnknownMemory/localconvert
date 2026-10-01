@@ -1,13 +1,13 @@
-import { useContext, useState } from "react";
+import {useContext, useState} from "react";
 import {Stack} from "expo-router";
-import {Text, StyleSheet, Pressable, View} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { DocumentPickerAsset, getDocumentAsync } from "expo-document-picker";
+import {Pressable, StyleSheet, Text, View} from "react-native";
+import {SafeAreaView} from "react-native-safe-area-context";
+import {DocumentPickerAsset, getDocumentAsync} from "expo-document-picker";
 
-import { THEME } from "@/app/constants";
-import { SettingsContext } from "@/context/settings";
+import {THEME} from "@/app/constants";
+import {SettingsContext} from "@/context/settings";
 import Card from "@/components/card";
-import { useTCP } from "@/hooks/useTCP";
+import {Status, useTCP} from "@/hooks/useTCP";
 
 
 export default function App() {
@@ -36,6 +36,8 @@ export default function App() {
         }
     };
 
+    const isConverting = status === Status.SENDING || status === Status.CONVERTING || status === Status.RECEIVING
+
     return (
         <>
         <Stack.Screen options={{ title: "localconvert" }} />
@@ -50,11 +52,11 @@ export default function App() {
                           setBitrate={setBitrate}/> : <View style={{flex: 1,alignItems: "center", justifyContent: "center"}}><Text style={styles.text}>Select a file</Text></View>}
 
             <View style={{flexDirection: "row", gap: 15}}>
-            <Pressable style={styles.btn} onPress={addFile}>
+            <Pressable style={[styles.btn, isConverting ? styles.btnDisabled : ""]} onPress={addFile} disabled={isConverting}>
                 <Text>Add file</Text>
             </Pressable>
             {file ? (
-                <Pressable style={styles.btn} onPress={() => sendFile(file, options)}>
+                <Pressable style={[styles.btn, isConverting ? styles.btnDisabled : ""]} onPress={() => sendFile(file, options)} disabled={isConverting}>
                     <Text>Convert file</Text>
                 </Pressable>
             ) : (
@@ -110,4 +112,7 @@ const styles = StyleSheet.create({
         padding: 16,
         marginBottom: 35,
     },
+    btnDisabled: {
+        backgroundColor: THEME.darkBlue
+    }
 });

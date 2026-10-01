@@ -63,7 +63,7 @@ export function useTCP(port: number, host: string | undefined, outputFolder: str
                         break;
                     }
 
-                    const buffer = Buffer.concat(chunks, bufferedLength);
+                    const buffer = chunks.length === 1 ? chunks[0] : Buffer.concat(chunks, bufferedLength);
                     header = validHeader(buffer);
                     const chunksRest = buffer.subarray(HEADER_SIZE) as Buffer;
 
@@ -77,7 +77,7 @@ export function useTCP(port: number, host: string | undefined, outputFolder: str
                         break;
                     }
 
-                    const buffer = Buffer.concat(chunks, bufferedLength);
+                    const buffer = chunks.length === 1 ? chunks[0] : Buffer.concat(chunks, bufferedLength);
                     const fileData = read(buffer, header);
                     header = null;
                     const chunksRest = buffer.subarray(payloadLength) as Buffer;
@@ -100,7 +100,7 @@ export function useTCP(port: number, host: string | undefined, outputFolder: str
                             setStatus(Status.CONVERTING)
                             break
                         default:
-                            break
+                            setStatus(Status.ERR)
                     }
 
                 }
